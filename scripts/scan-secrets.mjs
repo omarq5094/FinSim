@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { log, error } from "node:console";
 import process from "node:process";
+import { execFileSync } from "node:child_process";
 
 const ignored = new Set([".git","node_modules",".next","coverage","test-results","playwright-report"]);
 const patterns = [
@@ -24,5 +25,10 @@ function scan(dir) {
   }
 }
 scan(process.cwd());
+if (process.argv.includes("--history")) {
+  const history=execFileSync("git",["log","--all","-p","--format="],{encoding:"utf8",maxBuffer:32*1024*1024});
+  if (patterns.some(pattern=>pattern.test(history))) { error("Possible credential pattern in Git history. Match not printed."); failed=true; }
+  else log("No credential patterns found in local Git history.");
+}
 if (failed) process.exitCode=1;
 else log(`No credential patterns found in ${count} source/config/documentation files. Local environment files excluded.`);
