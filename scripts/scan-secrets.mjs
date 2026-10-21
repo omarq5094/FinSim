@@ -4,7 +4,7 @@ import { log, error } from "node:console";
 import process from "node:process";
 import { execFileSync } from "node:child_process";
 
-const ignored = new Set([".git","node_modules",".next","coverage","test-results","playwright-report"]);
+const ignored = new Set([".git",".preview","node_modules",".next","coverage","test-results","playwright-report"]);
 const patterns = [
   /sb_secret_[A-Za-z0-9_-]{20,}/,
   /(?:gh[pousr]_|github_pat_)[A-Za-z0-9_]{30,}/,

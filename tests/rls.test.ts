@@ -22,6 +22,8 @@ beforeAll(async () => {
     create schema auth; create table auth.users(id uuid primary key);
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     grant usage on schema auth to anon,authenticated; grant execute on function auth.uid() to anon,authenticated;`);
+  await db.exec(`create function public.rls_auto_enable() returns event_trigger language plpgsql security definer as $$ begin return; end; $$;
+    create event trigger ensure_rls on ddl_command_end when tag in ('CREATE TABLE') execute function public.rls_auto_enable();`);
   for (const id of Object.values(users)) await db.query("insert into auth.users values($1)",[id]);
   for (const file of readdirSync("supabase/migrations").filter(f => f.endsWith(".sql")).sort()) await db.exec(readFileSync(`supabase/migrations/${file}`,"utf8"));
   for (const role of Object.keys(users)) {
@@ -75,6 +77,10 @@ describe("schema and authentication", () => {
   });
   it("keeps privileged functions out of the exposed public schema", async () => {
     expect((await db.query("select proname from pg_proc where pronamespace='public'::regnamespace and prosecdef")).rows).toEqual([]);
+  });
+  it("preserves and secures the dashboard automatic-RLS helper",async () => {
+    expect((await db.query("select p.prosecdef, has_function_privilege('anon',p.oid,'execute') as anon_execute from pg_proc p where p.oid='finsim_internal.rls_auto_enable()'::regprocedure")).rows).toEqual([{prosecdef:false,anon_execute:false}]);
+    expect((await db.query("select evtname from pg_event_trigger where evtname='ensure_rls'")).rows).toHaveLength(1);
   });
 });
 

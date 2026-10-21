@@ -1,5 +1,4 @@
 -- FinSim only. Initial schema; never apply to Maghsaltak or another existing project.
-begin;
 revoke create on schema public from public, anon, authenticated;
 alter default privileges in schema public revoke all on tables from public, anon, authenticated;
 alter default privileges in schema public revoke execute on functions from public, anon, authenticated;
@@ -8,6 +7,16 @@ alter default privileges in schema public revoke all on sequences from public, a
 create schema finsim_internal;
 revoke all on schema finsim_internal from public, anon, authenticated;
 grant usage on schema finsim_internal to authenticated;
+
+-- Dashboard's automatic-RLS option creates a public SECURITY DEFINER helper.
+-- Preserve its event trigger but move the helper outside the exposed API schema.
+do $$ begin
+  if to_regprocedure('public.rls_auto_enable()') is not null then
+    alter function public.rls_auto_enable() set schema finsim_internal;
+    alter function finsim_internal.rls_auto_enable() security invoker;
+    revoke all on function finsim_internal.rls_auto_enable() from public, anon, authenticated;
+  end if;
+end $$;
 
 create function finsim_internal.enable_public_table_rls()
 returns event_trigger language plpgsql security invoker set search_path = '' as $$
@@ -287,4 +296,3 @@ grant execute on function public.create_scenario_draft(uuid,uuid,text,bigint,big
 comment on table public.scenario_versions is 'Reserved immutable version records. No client write grants or checkpoint execution in week one.';
 comment on column public.scenario_inputs.expected_annual_return_bps is 'User annual target assumption; 1800=18%. Not a calculated return.';
 comment on table public.simulation_events is 'Append-only draft audit, not a simulation clock or accounting journal.';
-commit;

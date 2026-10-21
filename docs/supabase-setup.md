@@ -1,72 +1,52 @@
-# إعداد Supabase عند إتاحة المؤسسة
+# إعداد Supabase الفعلي
 
-## العائق الحالي
+المؤسسة FinSim (fskyjgabjttvjxnsprel) والمشروع FinSim (eavlsxplctfvlmhjmbvz) موجودان بالخطة المجانية. المنطقة الحالية Sydney ap-southeast-2. مخطط FinSim طُبق؛ لا تعِد تشغيل migration الابتدائية على هذا المشروع.
 
-الاتصال يعرض مؤسسة Maghsaltak ومشروعها فقط. **مؤسسة FinSim غير متاحة للحساب المتصل**، ولذلك لم ينشأ مشروع FinSim ولم يطبق SQL على السحابة. الصورة المشار إليها غير متاحة ضمن المرفقات الحالية؛ الملف النصي هو المرجع المتوفر.
+## الاتصال
 
-الإجراء المطلوب: أنشئ مؤسسة FinSim بنفسك من حساب Supabase الصحيح أو اقبل دعوتها إن كانت قائمة، ثم امنح الحساب المتصل صلاحية عليها وأعد ربط تكامل Supabase بالحساب الصحيح. بعد أن تظهر في list_organizations، يمكن إنشاء المشروع داخلها. لا ترسل كلمة مرور أو access token أو secret في المحادثة.
+.env.local يحتوي NEXT_PUBLIC_SUPABASE_URL وNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY وSUPABASE_PROJECT_REF. القيم كلها معرّفات ومفتاح عام؛ لا يحتاج التطبيق كلمة مرور قاعدة البيانات أو service_role/secret. الملف مستبعد من Git. لا تنقل بيانات مشروع آخر أو تضع أسرارًا في NEXT_PUBLIC_ أو logs.
 
-## إنشاء المورد الصحيح
+تكامل Supabase الإداري الحالي يرفض الوصول للمشروع الجديد؛ يجب إعادة ربطه بالحساب/المؤسسة الصحيحة قبل استخدام CLI/MCP للإدارة. تنفيذ التأسيس تم من جلسة Dashboard المخوّلة. هذا يختلف عن عميل التطبيق الذي يتصل بالمشروع الصحيح بالفعل.
 
-- المؤسسة: FinSim فقط؛ لا تستخدم Maghsaltak.
-- المشروع: FinSim بالاسم المطابق.
-- المنطقة: أقرب المتاح. مومباي ap-south-1 مرشح قريب جغرافيًا للرياض ضمن المناطق التي تعرضها الأداة، مع التحقق من التوفر وزمن الوصول. لم تختر منطقة فعليًا.
-- عند طلب تكلفة أو ترقية غير صفرية، يتوقف الإنشاء ويعرض المبلغ للمستخدم قبل أي التزام.
-- بعد الإنشاء ينتظر المشروع حتى الحالة الصحية، ثم يعاد التحقق من الاسم والمؤسسة والمعرّف قبل DDL.
+## المخطط والتاريخ
 
-## إعدادات Cloud
+الملف supabase/migrations/20261021192951_workspace_foundation.sql أُنشئ اسمه عبر CLI، ثم اختبر على PGlite وطبق عبر SQL Editor. أُنشئت بيانات تاريخ الترحيل بالبنية القياسية version/text وstatements/text[] وname/text، وسُجل الإصدار 20261021192951 واسم workspace_foundation داخل نفس المعاملة. لا ينفذ الملف نفسه BEGIN/COMMIT، لتوافق أدوات الترحيل التي تدير المعاملات.
 
-فعّل Data API، عطّل Automatically expose new tables، وفعّل Enable automatic RLS. لا تفترض أن create_project يضبطها؛ تحقق من Dashboard. ملف migration يسحب الامتيازات الافتراضية للكائنات الجديدة ويضع GRANT صريحًا ويضيف event trigger لتفعيل RLS تلقائيًا على public. هذه ضمانات SQL إضافية ولا تثبت حالة مفاتيح Dashboard.
+راجع التاريخ والحالة قبل أي تغيير لاحق. لا تستخدم db reset أو تحذف موارد قائمة. أي تعديل تالٍ يأتي في migration جديدة، وليس بتغيير الإصدار المطبق.
 
-اضبط Site URL على http://localhost:3000 أثناء التطوير، وفعّل تأكيد البريد، وطول كلمة المرور الأدنى 12. تأكيد البريد يستخدم رابط Supabase الافتراضي ثم تسجيل دخول يدوي بكلمة مرور التطبيق. لا توجد OAuth أو استعادة كلمة مرور أو دعوات بريد في الأسبوع الأول.
+## Data API وRLS
 
-## تطبيق المخطط
+Data API مفعّل، auto-expose معطّل، وautomatic RLS مفعّل. المخطط يفعّل RLS صراحة ويفرضها على كل جدول، ويمنح امتيازات أعمدة محددة لدور authenticated مع سياسات العضوية.
 
-الملف الوحيد: supabase/migrations/20261021192951_workspace_foundation.sql. أُنشئ اسمه بواسطة CLI، واختُبر محتواه محليًا على PGlite. لم ينفذ على مشروع خارجي.
-
-عند التنفيذ على مشروع FinSim المؤكد، افحص حالة الجداول والمigrations أولًا. لا تستخدم db reset على مورد سحابي ولا تعيد إنشاء مورد قائم. إن وجدت بيانات أو أسماء متعارضة فراجع توافق المخطط قبل تطبيقه.
-
-يحتوي SQL على:
-- تسعة جداول وقيود وفهارس متعددة المؤسسات.
-- RLS صريح على الجداول كلها و20 سياسة حسب التفويض.
-- امتيازات أعمدة تمنع تبديل المالك والمؤسسة والروابط والأختام الزمنية.
-- تفعيل RLS على الجداول العامة الجديدة وامتيازات افتراضية مسحوبة.
-- دوال خاصة محدودة لتفويض الأدوار والإنشاء الذري وإدارة العضويات.
-- ثلاثة RPCs عامة SECURITY INVOKER، وسجل أحداث يكتبه trigger موثوق.
-
-الامتيازات الافتراضية تخص دور تنفيذ DDL؛ إذا استخدم دور آخر لإنشاء كائنات مستقبلًا فيجب ضبط امتيازاته أيضًا. لا تكشف finsim_internal في Data API.
-
-بعد التطبيق افحص:
+finsim_internal غير مكشوف لـData API. دالة Dashboard المسماة rls_auto_enable نقلت إليه وأصبحت SECURITY INVOKER، مع الحفاظ على trigger. لا توجد دالة مميزة في public. امتيازات الكائنات الجديدة تتطلب منحًا صريحًا، وتخص افتراضيًا دور DDL الذي نفذ الترحيل.
 
 ```sql
 select c.relname,c.relrowsecurity,c.relforcerowsecurity
-from pg_class c join pg_namespace n on n.oid=c.relnamespace
-where n.nspname='public' and c.relkind='r';
-
-select tablename,policyname,roles,cmd,qual,with_check
-from pg_policies where schemaname='public';
-
-select evtname,evtenabled from pg_event_trigger
-where evtname='finsim_enable_rls_on_new_public_tables';
-
-select proname from pg_proc
-where pronamespace='public'::regnamespace and prosecdef;
+from pg_class c where c.relnamespace='public'::regnamespace and c.relkind='r';
+select tablename,policyname,cmd from pg_policies where schemaname='public';
+select version,name from supabase_migrations.schema_migrations;
+select proname from pg_proc where pronamespace='public'::regnamespace and prosecdef;
 ```
 
-يجب أن تكون RLS مفعلة على كل الجداول، وآخر استعلام بلا نتائج. شغّل Security Advisors وراجع ملاحظاته قبل اعتماد الربط.
+النتيجة المؤكدة: تسعة جداول، 20 سياسة، migration واحدة، وصفر دوال public ذات SECURITY DEFINER. Security Advisors بعد إعادة الفحص يعرض صفر أخطاء وتحذيرات.
 
-## البيئة والأنواع
+## Auth
 
-انسخ .env.example إلى .env.local، وضع URL ومفتاح publishable ومعرّف مشروع FinSim. لا يلزم سر قاعدة بيانات لتشغيل التطبيق. الحارس يرفض مشروع المغسلة ونطاقًا غير مطابق أو مفتاحًا سريًا. config.toml إعداد محلي فقط ولا يغيّر Cloud.
+البريد مفعّل وتأكيده مطلوب، والتسجيل المجهول معطّل. طول كلمة المرور الأدنى 12 وSecure password change مفعّل. لم تُغيّر أي كلمة مرور قائمة. ميزة منع كلمات المرور المسربة مدفوعة ولم تُفعّل.
 
-الأنواع الحالية مولدة من كتالوج PostgreSQL المحلي المطابق لملف migration، وليس من خدمة سحابية. عند توفر FinSim استخدم generate_typescript_types للمشروع المؤكد أو CLI gen types بعد قراءة --help، ثم راجع فروق الأنواع قبل استبدالها. Docker daemon غير مشغّل؛ لم تُشغّل حزمة Supabase المحلية. حارس التطبيق الحالي يقبل نطاق Supabase السحابي الموثق فقط، ولا يدعم ربط localhost حتى يضاف وضع تطوير صريح آمن.
+حساب التطبيق مستقل عن حساب Dashboard. رابط التأكيد الافتراضي يؤكد البريد ثم يسجل المستخدم الدخول بكلمة مرور التطبيق. لا توجد OAuth أو استعادة كلمة مرور في الأسبوع الأول.
 
-## اختبار القبول السحابي المؤجل
+قبل نشر التطبيق يجب أن يشير Site URL إلى نطاق الإنتاج المؤكد، مع روابط تطوير محددة في allow-list عند الحاجة. لا تستخدم wildcard واسعًا. سجّل الحالة الفعلية بعد النشر في تقرير الأسبوع الأول.
 
-1. أنشئ حسابين وهميين A وB، ثم مساحة وشركة لكل حساب. تحقق من الحفظ بعد إعادة تحميل الصفحة.
-2. تأكد من منع B من قراءة أو تعديل أي بيانات للمؤسسة A عبر الواجهة وData API مباشرة.
-3. أضف مستخدمين وهميين بأدوار cfo وanalyst وviewer، ثم افحص حدود جدول الصلاحيات وإزالة العضوية الفورية.
-4. تحقق من رفض anon والتزوير وتغيير tenant ids، وصحة events وupdated_at.
-5. لا تسجل كلمات مرور أو JWT أو مفاتيح في logs، وشغّل Advisors.
+## التحقق والأنواع
 
-لم تنفذ هذه الخطوات السحابية لأن مؤسسة FinSim غير متاحة. لا يُعد نجاح PGlite دليلًا على نجاح Auth أو PostgREST الفعليين.
+scripts/sql/verify-cloud-security.sql اختبر SQL الحقيقي بأدوار owner/cfo/analyst/viewer وهويات وهمية داخل rollback. لا يكتب كلمات مرور أو credentials ولا يترك بيانات. نجحت الحدود ومنع العضوية غير المصرح بها والروابط المختلطة وanon.
+
+كتالوج Cloud صدر من information_schema/pg_proc، وأنواع TypeScript الناتجة تطابقت مع توليد PGlite المحلي حرفيًا. للمولد وضع ملف كتالوج اختياري:
+```powershell
+node scripts/generate-types.mjs <verified-catalog.json>
+```
+
+عند عودة الاتصال الإداري يمكن استخدام generate_typescript_types الرسمي بعد مراجعة الفروق. حزمة Supabase المحلية الكاملة تحتاج Docker، وهو غير مشغّل هنا.
+
+اختبار واجهة تسجيل الدخول وإنشاء الشركة يتطلب حساب تطبيق صالحًا؛ محاولة دخول المستخدم لم تنجح، فلا يوصف التدفق الكامل بأنه اجتاز الاختبار.

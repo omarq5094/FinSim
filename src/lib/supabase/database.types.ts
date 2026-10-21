@@ -1,4 +1,4 @@
-// Generated from local migration-applied PostgreSQL catalog. Not verified against a cloud project.
+// Generated from PostgreSQL catalog. See docs/week-1-status.md for cloud verification.
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 export type Database = { public: { Tables: {
 companies: {
