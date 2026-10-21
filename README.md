@@ -26,6 +26,7 @@ npm run dev
 ## الموارد المؤكدة
 
 - [GitHub: omarq5094/FinSim](https://github.com/omarq5094/FinSim).
+- [النسخة المنشورة](https://finsim-ai-navy.vercel.app) — نشر يدوي مؤكد READY من الالتزام `09db822`، مع استجابة HTTP 200 للبداية والدخول.
 - [Supabase: FinSim](https://supabase.com/dashboard/project/eavlsxplctfvlmhjmbvz)، داخل مؤسسة FinSim، المرجع fskyjgabjttvjxnsprel، بالخطة المجانية.
 - المنطقة الفعلية: Sydney، ap-southeast-2. النموذج أُعد سابقًا لمومباي، لكن المشروع القائم أُنشئ في سيدني؛ حُفظ دون حذف أو إعادة إنشاء. تحسين المنطقة للسعودية قرار لاحق.
 - لا توجد تغييرات على أي مورد Maghsaltak.
